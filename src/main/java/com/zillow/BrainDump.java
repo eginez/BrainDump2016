@@ -22,11 +22,12 @@ public class BrainDump {
 
         //Multiline lambda statement with {}
         l.forEach( (e) ->  {
-            long ts = System.currentTimeMillis();
-            out.println(String.format("Element %d and time: %d", e, ts));
+            String name = Thread.currentThread().getName();
+            out.println(String.format("Element %d on thread: %s", e, name));
         });
-
     }
+
+
 
 
 
