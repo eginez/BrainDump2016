@@ -1,26 +1,38 @@
 package com.zillow;
 
-import java.awt.font.NumericShaper;
 import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.DoubleStream;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 
 public class BrainDump {
 
+    static boolean  myDebugFlag =  true;
 
-    public static void lambdaExpressionsAndFunctionInterfaces() {
+
+    public static void main(String[] args) {
+        lambdaExpressions();
+        functionInterfaces();
+        methodReference();
+        optional();
+        streams();
+        //collectors();
+
+    }
+
+
+
+    public static void lambdaExpressions() {
+        /**
+        Lambda expression are a new way to express anonymous functions and or closures
+         */
 
         //Anonymous function
         Thread n = new Thread(new Runnable() {
@@ -48,9 +60,128 @@ public class BrainDump {
         //Inferred type no return and no parenthesis
         l.sort((n1, n2) -> n2 - n1);
 
+        /**
+        Lambas are powerful because, they allow us to
+        - Receive functions as arguments
+        - Return a function
+        - A combination of both
+
+        But before we can use this power we have to be able to declare functions
+         */
 
 
     }
+
+
+    private static void functionInterfaces() {
+
+
+        /**
+         * Enter functional interfaces
+         - Java already had such interfaces, however by using the @FunctioInterface annotation, they ca be created with a lambda
+         */
+
+       //Predicate
+        Predicate<Integer> isEven  = i -> i % 2 == 0;
+        System.out.println(isEven.test(2));
+
+
+        //Function
+        Function<String, String> politely = s -> s.concat(", Please.");
+        System.out.println(politely.apply("Pass me the salt"));
+
+
+        //Simple Supplier
+        AtomicInteger state = new AtomicInteger(0);
+        Supplier<Integer> inc = () -> state.incrementAndGet();
+        System.out.println(inc.get());
+        System.out.println(inc.get());
+
+        //Simple Consumer
+        Consumer<Supplier<Integer>> printIfEven =  s -> {
+            Integer n = s.get();
+            if(isEven.test(n)) {
+                System.out.println(n);
+            }
+
+        };
+
+        printIfEven.accept(inc);
+        printIfEven.accept(inc);
+        printIfEven.accept(inc);
+        printIfEven.accept(inc);
+
+
+
+
+        //functions can be combined to create more powerful and higher abstractions
+        BiConsumer<Supplier<Integer>, Predicate<Integer>> printConditionally = (s, p) -> {
+            Integer n = s.get();
+            if(p.test(n)) {
+                System.out.println(n.intValue());
+            }
+        };
+        printConditionally.accept(inc, isEven);
+        printConditionally.accept(inc, isEven);
+
+
+        printConditionally.accept(inc, i -> i % 2 != 0);
+        printConditionally.accept(inc, i -> i % 3 != 0);
+
+        //That's nice but I am always 'printing'...
+        //Let's define a method to extract out the operation
+        //The consumer  can be anything that needs an integer
+        proccessConditionally(inc, isEven, i -> System.out.println(i));
+        proccessConditionally(inc, isEven, i -> {
+            long  time = System.currentTimeMillis() * i;
+            System.err.println(time);
+        });
+
+        //Another example a little more concrete
+        //Let's say our app has to check some internal state before performing logging tasks
+        Logger logger = Logger.getAnonymousLogger();
+
+        //we end up with code like  this sprinkled around the app
+        if ((logger.getLevel() == Level.FINE || logger.getLevel() ==Level.INFO)  && myDebugFlag) {
+            logger.fine("done");
+        }
+
+        // in some other occasions we want to time things
+        final long start = System.currentTimeMillis();
+        if ((logger.getLevel() == Level.FINE || logger.getLevel() ==Level.INFO)  && myDebugFlag) {
+            long end = System.currentTimeMillis();
+            logger.fine("done it took: " +  (start - end));
+        }
+
+        //If we were to use lambdas, we coudn then abstract out the operations
+        //from the predicates
+        logIfAllowed(logger, l -> {
+            l.fine("done");
+        });
+
+        logIfAllowed(logger, l -> {
+            long end = System.currentTimeMillis();
+            logger.fine("done it took: " +  (start - end));
+        });
+    }
+
+    private static void proccessConditionally(Supplier<Integer> source, Predicate<Integer> predicate, Consumer<Integer> consumer) {
+        Integer n = source.get();
+        if(predicate.test(n)) {
+            consumer.accept(n);
+        }
+    }
+
+    private static void logIfAllowed(Logger logger, Consumer<Logger> c) {
+        if ((logger.getLevel() == Level.FINE || logger.getLevel() ==Level.INFO)  && myDebugFlag) {
+            c.accept(logger);
+        }
+    }
+
+
+
+
+
 
     private static void methodReference() {
         List<String> l = Arrays.asList("a,1", "b,1", "c,3", "d,4", "e,5");
@@ -72,6 +203,21 @@ public class BrainDump {
         Arrays.asList("1", "2", "3").stream().map(Float::new).forEach(System.out::println);
     }
 
+
+    public static void optional() {
+        Optional<String> o = Optional.of("String");
+        Optional<String> p = Optional.ofNullable(null);
+
+        if(o.isPresent()) {
+            System.out.println(o);
+        }
+
+        //Or more succinctly
+        o.ifPresent(System.out::println);
+        p.ifPresent(System.out::println);
+
+
+    }
 
 
     private static void streams() {
@@ -113,17 +259,7 @@ public class BrainDump {
         IntStream.iterate(0, i->i+10).filter(i-> i>5000).findFirst().ifPresent(System.out::println);
 
 
-
-
     }
-
-
-    public static void main(String[] args) {
-        lambdaExpressionsAndFunctionInterfaces();
-        methodReference();
-        streams();
-    }
-
 
 
     public static List<Map> createData() {
@@ -131,11 +267,6 @@ public class BrainDump {
                 .url("https://raw.github.com/square/okhttp/master/README.md")
                 .build();
         return null;
-    }
-
-
-    public static void collectors() {
-        //Sort properties by type given a list of properties group them by type
     }
 
 }
