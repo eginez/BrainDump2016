@@ -18,6 +18,26 @@ public class CompletableFutureDemo implements PrintableTest {
     ExecutorService executorService = Executors.newFixedThreadPool(10);
     ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(2);
 
+    private List<Map<String,Object>> parse(String s) {
+        final Type typeOf = new TypeToken<List<Map<String,Object>>>(){}.getType();
+        Gson gson = new Gson();
+        return gson.fromJson(s, typeOf);
+    }
+
+    private List<Map<String,Object>> parseRepo(String s) {
+        final Type typeOf = new TypeToken<List<Map<String,Object>>>(){}.getType();
+        Gson gson = new Gson();
+        return gson.fromJson(s, typeOf);
+    }
+
+    private List<String> extractNameFromRepos(List<Map<String, Object>> repos) {
+        return repos.stream().map(r -> (String)r.get("name")).collect(Collectors.toList());
+    }
+
+
+
+
+
     public CompletableFuture<List<String>> getReposForUser(String user) {
         final OkHttpClient client = new OkHttpClient();
         String url = Arrays.asList("https://api.github.com/users", user, "repos")
@@ -52,34 +72,13 @@ public class CompletableFutureDemo implements PrintableTest {
         }, executorService);
     }
 
-    private List<Map<String,Object>> parse(String s) {
-        final Type typeOf = new TypeToken<List<Map<String,Object>>>(){}.getType();
-        Gson gson = new Gson();
-        return gson.fromJson(s, typeOf);
-    }
-
-    private List<Map<String,Object>> parseRepo(String s) {
-        final Type typeOf = new TypeToken<List<Map<String,Object>>>(){}.getType();
-        Gson gson = new Gson();
-        return gson.fromJson(s, typeOf);
-    }
-
-
-    private List<String> extractNameFromRepos(List<Map<String, Object>> repos) {
-        return repos.stream().map(r -> (String)r.get("name")).collect(Collectors.toList());
-    }
-
-
-
-
-
-
 
 
     @Test
     public void simpleCF() throws Exception {
         /**
-         * A completable future is a Future that enhances dealing with asyn calls
+         * To create an completable future, we can use its builder methods
+         * runAsync, supplyAsync
          */
 
         CompletableFuture
@@ -122,16 +121,18 @@ public class CompletableFutureDemo implements PrintableTest {
 
         CompletableFuture<List<String>> reposOfBrandur = getReposForUser("brandur");
         CompletableFuture<List<String>> myRepos = getReposForUser("eginez");
-        myRepos.thenCombineAsync(reposOfBrandur, (r1, r2) -> {
+        CompletableFuture<Void> combined = myRepos.thenCombineAsync(reposOfBrandur, (r1, r2) -> {
             r1.addAll(r2);
             return r1;
-        }).thenAccept(this::print).get();
+        }).thenAccept(this::print);
+
+        combined.get();
     }
 
     @Test
     public void any() throws Exception {
         /**
-         * let's say I need to combine the reponses from two different services
+         * Or let's say I have to endpoints with the same information, and I only want to use one of them
          */
 
         CompletableFuture<List<String>> reposOfBrandur = getReposForUser("brandur");
