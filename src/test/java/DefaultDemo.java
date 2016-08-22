@@ -1,4 +1,4 @@
-package com.zillow;
+import org.junit.Test;
 
 public class DefaultDemo {
     /**
@@ -7,14 +7,10 @@ public class DefaultDemo {
     interface LegacyInterface {
         public String sayHi();
 
-        /*
         default String sayMaybe() {
             return "maybe".toUpperCase();
         }
-        */
 
-
-        /*
         static public String toEmoticon(String ascii) {
             char[]  chars = Character.toChars(0x2753);
             if(ascii.equalsIgnoreCase(":)")) {
@@ -24,7 +20,6 @@ public class DefaultDemo {
             }
             return String.valueOf(chars);
         }
-        */
     }
 
 
@@ -36,26 +31,56 @@ public class DefaultDemo {
     /**
      * Legacy Client
      */
-    static class LegacyClient implements LegacyInterface, NewInterface {
+    static class LegacyClient implements LegacyInterface {
         @Override
         public String sayHi() {
             return "Hi from legacy!!".toUpperCase();
         }
     }
 
+    /**
+     * NewCLient
+     */
+    static class NewClient implements LegacyInterface, NewInterface {
+        @Override
+        public String sayHi() {
+            return "Hi from legacy!!".toUpperCase();
+        }
+
+        @Override
+        public String sayMaybe() {
+            return "new maybe";
+        }
+    }
 
 
 
-    public static void main(String []args) {
 
-        LegacyInterface l = new LegacyClient();
-        System.out.println(l.sayHi());
 
+
+
+
+    @Test
+    public void interfaceCall() {
         //The method is now implemented in the interface
-        //System.out.println(l.sayMaybe());
+        LegacyInterface l = new LegacyClient();
+        System.out.println(l.sayMaybe());
 
+    }
+
+    @Test
+    public void interfaceStaticCall() {
         //Interfaces now support static methods
-        //System.out.println(LegacyInterface.toEmoticon(":)"));
+        System.out.println(LegacyInterface.toEmoticon(":)"));
+
+    }
+
+    @Test
+    public void multipleInheritance() {
+        //Interfaces now support static methods
+        LegacyInterface l = new NewClient();
+        System.out.println(l.sayMaybe());
+
     }
 }
 

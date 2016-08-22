@@ -1,12 +1,11 @@
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class DemoCollectors {
+public class CollectorsDemo implements PrintableTest {
 
      class Property {
          public int id;
@@ -112,16 +111,11 @@ public class DemoCollectors {
                         (Property p) -> p.getPrice() > 50,
                         Collectors.averagingInt(Property::getPrice)));
         print(part2);
+        //The collectors api has more functions to manually reduce a stream
+        //If that doesn't work we can always roll in a child of Collector
 
     }
 
 
-    public void print(Collection c) {
-        c.forEach(System.out::println);
-        System.out.println("===================");
-    }
 
-    public void print(Map c) {
-        print(c.entrySet());
-    }
 }
