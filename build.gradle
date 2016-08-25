@@ -1,10 +1,14 @@
+//https://docs.gradle.org/current/dsl/
+
 group 'com.zillow'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
-apply plugin: 'application'
 
-mainClassName = 'com.zillow.BrainDump'
+//exact same as the previous line
+//project.apply([ plugin: 'application'])
+//mainClassName = 'com.zillow.BrainDump'
+
 
 repositories {
     mavenCentral()
@@ -19,7 +23,31 @@ dependencies {
 
 }
 
-task defaultDemo (type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    main ='DefaultDemo'
-}
+
+//Configuration step vs execution step
+//The configration step will get call regardless on wehther I execute my task or not
+//task first {
+//    println 'configuring first'
+//    doLast {
+//        println 'running first'
+//    }
+//}
+
+//<< is an alias for doLast
+//task second << {
+//    println 'executing second'
+//}
+
+
+//The next thing is to create dependencies between tasks
+//second.dependsOn first
+
+//Hook into the build task comming for the java plugin
+//run.dependsOn second
+
+
+//insert yourself after compile
+//compileJava.dependsOn first
+
+
+
